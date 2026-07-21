@@ -1,0 +1,82 @@
+# ============ DATA — never commit (licensing + size) ============
+*.pth
+*.pt
+*.npy
+*.mat
+*.h5
+*.hdf5
+emb_eeg/
+imagenet_synsets/
+imageNet_images/
+EEG-ImageNet-Dataset/
+**/Preprocessed_data*/
+**/preprocessed_eeg*
+*.tar
+*.JPEG
+*.jpeg
+*.jpg
+*.png
+
+# ============ model outputs / checkpoints ============
+models/
+outputs/
+**/checkpoints/
+*.ckpt
+wandb/
+
+# ============ our backup files ============
+*.bak
+*.bak_*
+
+# ============ logs ============
+*.log
+nohup.out
+
+# ============ python cruft ============
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# ============ OS / editor ============
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ============ env files that may hold secrets ============
+.env
+*.key
+
+# ============ vendored third-party libraries ============
+**/mne-python-main/
+View the Data (visual)/
+LaBraM/
+labram_scaffold/
+REU-PIPELINE/
+
+# ============ downloaded model weights / caches ============
+Generation/vision_models/
+**/models--*/
+**/*.incomplete
+*.incomplete
+
+# ============ tokenized / large intermediate data ============
+image_set/
+*.jsonl
+
+# ============ generation subsystem (not core to retrieval paper) ============
+Generation/
+_archive/
+
+# nested data repo (297GB, has its own .git/lfs) — never commit
+EEG_Image_decode/
+
+# third-party repos with pretrained weights
+third_party/
+
+# reference papers folder
+ZZZZZZZZZZ Papers_ref/

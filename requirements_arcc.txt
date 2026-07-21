@@ -1,0 +1,43 @@
+# ARCC-ready requirements for EEG_Image_decode (Linux/CUDA).
+# Cleaned from Windows pip freeze: removed win-specific file:// wheels.
+#
+# INSTALL ORDER MATTERS:
+# 1. FIRST install torch matching ARCC's CUDA version (see their docs), e.g.:
+#      pip install torch==2.5.0 torchvision==0.20.0 torchaudio==2.5.0
+#      (with the correct --index-url for ARCC's CUDA)
+# 2. THEN: pip install -r requirements_arcc.txt
+
+# --- core DL (torch installed separately, step 1) ---
+timm==1.0.27
+open_clip_torch==2.32.0
+einops==0.8.1
+transformers==5.12.0
+sentence-transformers==2.7.0
+
+# --- scientific stack ---
+numpy==1.26.4
+scipy==1.15.3
+scikit-learn==1.6.1
+scikit-image==0.26.0
+pandas==2.2.3
+matplotlib==3.10.7
+mne==1.9.0
+
+# --- EEG / training utilities ---
+braindecode==0.8.1
+ema-pytorch==0.7.9
+info-nce-pytorch==0.1.0
+pytorch-warmup==0.2.0
+torchmetrics==1.9.0
+torchinfo==1.8.0
+
+# --- image / misc ---
+Pillow==10.4.0
+ftfy==6.3.1
+regex==2026.5.9
+tqdm==4.67.1
+
+# NOTE: generation-only packages (dalle2-pytorch, CoCa-pytorch,
+# vector-quantize-pytorch, reformer-pytorch, rotary-embedding-torch,
+# torch_fidelity, pytorch-msssim, clip-anytorch) omitted — add only if
+# you run reconstruction on ARCC.
