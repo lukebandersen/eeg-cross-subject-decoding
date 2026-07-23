@@ -49,6 +49,7 @@ import numpy as np
 import torch
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset, random_split
+from run_config import dump_run_config
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # for eeg_encoders / retrieval_engine
 
@@ -436,9 +437,12 @@ def _run_one(sub, args, device, current_time, preloaded):
         logit_scale_type=args.logit_scale_type,
     )
 
+
     save_results(results, args.output_dir, args.encoder_type,
                  sub, mode, current_time)
-
+    dump_run_config(
+        os.path.join(args.output_dir, args.encoder_type, sub, current_time),
+        args)
 
 # ---------------------------------------------------------------------------
 # Main
