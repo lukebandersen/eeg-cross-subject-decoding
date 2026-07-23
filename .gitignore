@@ -18,7 +18,7 @@ EEG-ImageNet-Dataset/
 *.png
 
 # ============ model outputs / checkpoints ============
-models/
+models/contrast/
 outputs/
 **/checkpoints/
 *.ckpt
