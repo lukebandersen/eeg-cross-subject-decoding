@@ -1,0 +1,29 @@
+# experiment_matrix.tsv -- every run to execute on ARCC.
+# STRICT FORMAT: exactly 7 TAB-separated fields per row. No alignment tabs.
+# (submit_all.sh parses with IFS=tab; extra tabs create empty fields and shift columns.)
+# Columns: exp_id  encoder  mode  dataset  seeds  status  notes
+# status: DONE=have it | DONE_LOCAL=already finished on the local 4080, do NOT
+#         resubmit | PARTIAL=some folds done locally, submit to finish |
+#         READY=code exists, run on ARCC | OPTIONAL=nice-to-have
+#         TODO=code not finished | PARKED=deliberately deferred
+A01	ATMS	intra	things	42,43,44	DONE	locked 3-seed baseline
+A02	ATMS	loso	things	42,43,44	DONE	locked
+A03	LaBraM_ATMS	intra	things	42,43,44	DONE	locked
+A04	LaBraM_ATMS	loso	things	42,43,44	DONE	locked
+B01	EEGNetv4_Encoder	intra	things	42	DONE_LOCAL	10/10 folds done locally 23 Jul; retention 38.7% (with B02)
+B02	EEGNetv4_Encoder	loso	things	42	DONE_LOCAL	10/10 folds done locally 23 Jul
+B03	EEGConformer_Encoder	intra	things	42	DONE_LOCAL	10/10 intra folds done locally; intra mean 0.0880
+B04	EEGConformer_Encoder	loso	things	42	READY	THE BOTTLENECK: ~20 hr/fold serial (255 ep x 9x data) = ~200 GPU-hr. Array is the whole point.
+B05	ShallowFBCSPNet_Encoder	intra	things	42	PARTIAL	5/10 intra folds done locally; 5 outstanding
+B06	ShallowFBCSPNet_Encoder	loso	things	42	READY	~5 hr/fold serial = ~50 GPU-hr
+B07	NICE	intra	things	42	OPTIONAL	extra specialist
+B08	NICE	loso	things	42	OPTIONAL	
+B09	ATM_E	intra	things	42	OPTIONAL	
+B10	ATM_E	loso	things	42	OPTIONAL	
+C01	CBraMod_Encoder	intra	things	42	DONE_LOCAL	10/10 intra folds done locally 23 Jul; intra mean 0.1305
+C02	CBraMod_Encoder	loso	things	42	DONE_LOCAL	10/10 folds done locally 23 Jul, seed 42, 300ep+ES. LOSO mean 0.0785 -> retention 60.2%
+D01	ATMS+LaBraM	xfer_frozen	things	-	DONE	cc_ret 0.154 vs 0.234 p=0.012 rank null
+D02	ATMS	loso_classify	things	42	READY	wired; gate 5 smoke-tests it
+D03	LaBraM_ATMS	loso_classify	things	42	READY	wired; gate 5 smoke-tests it
+D04	PANEL	xfer_frozen	things	-	TODO	run after Block B checkpoints exist
+E01	ATMS+LaBraM	loso	things_meg	42	PARKED	4 subjects only; no stats claim
