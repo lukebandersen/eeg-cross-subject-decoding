@@ -60,8 +60,11 @@ export ARCC_TIME="2-00:00:00"              # 2 days
 # -----------------------------------------------------------------------------
 
 # --------------------------- DERIVED (do not edit) ---------------------------
-export REPO_DIR="${ARCC_PROJECT_ROOT}/EEG_Image_decode-develop"
-export DATA_PATH="${REPO_DIR}/eeg_dataset/preprocessed_data"
+# Repo was cloned as ".../eeg_decode/repo" on MedicineBow (not the desktop
+# folder name). Data came from the HuggingFace dataset and lives under
+# EEG_Image_decode/Preprocessed_data_250Hz, matching the local layout.
+export REPO_DIR="${ARCC_PROJECT_ROOT}/repo"
+export DATA_PATH="${REPO_DIR}/EEG_Image_decode/Preprocessed_data_250Hz"
 export IMG_TRAIN="${REPO_DIR}/image_set/training_images"
 export IMG_TEST="${REPO_DIR}/image_set/test_images"
 export FEATURES_DIR="${REPO_DIR}/emb_eeg"

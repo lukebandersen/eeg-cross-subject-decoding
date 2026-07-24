@@ -38,8 +38,14 @@ echo "=============================================================="
 # --- environment (ARCC best practice: purge, then load exactly what you need) ---
 module purge
 module load "${ARCC_CONDA_MODULE}"
-# activate by name or by full path
-conda activate "${ARCC_ENV_NAME}"
+# `conda activate` is a shell FUNCTION, not a binary. Interactive logins get it
+# from ~/.bashrc; a batch shell does not, so without sourcing conda.sh the
+# activate silently no-ops and the job runs on the BASE python -- which has no
+# torch. Source it explicitly, then activate by full path.
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate "${ARCC_ENV_NAME}" || { echo "FATAL: could not activate ${ARCC_ENV_NAME}"; exit 3; }
+# fail loudly if we are somehow still on the wrong interpreter
+python -c "import torch" 2>/dev/null || { echo "FATAL: torch missing -- wrong env: $(which python)"; exit 4; }
 echo "Python: $(which python)"; python --version
 echo "GPU allocation:"; nvidia-smi -L
 
