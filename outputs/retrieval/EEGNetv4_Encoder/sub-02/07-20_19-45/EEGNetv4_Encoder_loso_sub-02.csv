@@ -1,0 +1,2 @@
+epoch,train_loss,val_loss,test_loss,test_accuracy,v2_acc,v4_acc,v10_acc,top5_acc,v50_acc,v100_acc,v50_top5_acc,v100_top5_acc
+1,5.07218401919129,5.600462931853074,0.0,0.025,0.765,0.525,0.31,0.105,0.095,0.05,0.3,0.2
