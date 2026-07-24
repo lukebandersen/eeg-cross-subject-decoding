@@ -27,3 +27,21 @@ D02	ATMS	loso_classify	things	42	READY	wired; gate 5 smoke-tests it
 D03	LaBraM_ATMS	loso_classify	things	42	READY	wired; gate 5 smoke-tests it
 D04	PANEL	xfer_frozen	things	-	TODO	run after Block B checkpoints exist
 E01	ATMS+LaBraM	loso	things_meg	42	PARKED	4 subjects only; no stats claim
+
+# --- seed replication of the panel -------------------------------------
+# Paper 1's locked asymmetry is three-seed (33.7+-3.1 / 93.3+-1.2). The panel
+# is currently seed 42 only, so a single-seed number sits next to a
+# three-seed one in the same table. These rows close that gap.
+# Submit a whole seed at once:  bash scripts/submit_all.sh SEED43 --go
+S11	CBraMod_Encoder	intra	things	43	SEED43	PRIORITY 1: denominator for the pivotal 60.2% retention (n=1 at seed 42)
+S12	CBraMod_Encoder	loso	things	43	SEED43	PRIORITY 1: numerator; ~92 min/fold locally, faster on H100
+S13	EEGNetv4_Encoder	intra	things	43	SEED43	PRIORITY 2: cheap (~6 min/fold); confirms 38.7% is stable
+S14	EEGNetv4_Encoder	loso	things	43	SEED43	PRIORITY 2: ~4.7 hr/fold locally
+S15	EEGConformer_Encoder	intra	things	43	SEED43	PRIORITY 3: ~86 min/fold; slowest encoder
+S16	EEGConformer_Encoder	loso	things	43	SEED43	PRIORITY 3: the expensive one, ~255 ep x 9x data
+S21	CBraMod_Encoder	intra	things	44	SEED44	PRIORITY 1: denominator for the pivotal 60.2% retention (n=1 at seed 42)
+S22	CBraMod_Encoder	loso	things	44	SEED44	PRIORITY 1: numerator; ~92 min/fold locally, faster on H100
+S23	EEGNetv4_Encoder	intra	things	44	SEED44	PRIORITY 2: cheap (~6 min/fold); confirms 38.7% is stable
+S24	EEGNetv4_Encoder	loso	things	44	SEED44	PRIORITY 2: ~4.7 hr/fold locally
+S25	EEGConformer_Encoder	intra	things	44	SEED44	PRIORITY 3: ~86 min/fold; slowest encoder
+S26	EEGConformer_Encoder	loso	things	44	SEED44	PRIORITY 3: the expensive one, ~255 ep x 9x data
