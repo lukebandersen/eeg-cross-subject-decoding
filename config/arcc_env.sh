@@ -20,7 +20,7 @@
 
 # ----------------------------- EDIT THESE ------------------------------------
 export ARCC_ACCOUNT="mayocancerai"        # confirmed: sacctmgr show assoc user=mwolff3
-export ARCC_PARTITION="mb-h100"           # gpu:h100:8 x6 nodes. Fallback: beartooth-gpu (gpu:a30:2, idle nodes)
+: "${ARCC_PARTITION:=mb-h100}"; export ARCC_PARTITION           # gpu:h100:8 x6 nodes. Fallback: beartooth-gpu (gpu:a30:2, idle nodes)
 export ARCC_GRES="gpu:1"                  # e.g. gpu:1 ; or gpu:l40s:1 to pin a type
 export ARCC_EMAIL="lukebandersen@gmail.com"
 
@@ -43,11 +43,14 @@ export ARCC_CONDA_MODULE="miniconda3/24.3.0"   # exact version from `module avai
 export ARCC_ENV_NAME="/project/mayocancerai/eeg_decode/envs/eeg312"
 
 # Per-job resource defaults (override per-script if a job is heavier/lighter).
-export ARCC_CPUS="8"                       # cpus-per-task
-# A 9-subject LOSO fold is the heavy case: ~4.2 GB per training subject, so
-# peak RSS during dataset assembly is ~38 GB. 32G was too tight and would OOM
-# during loading, before a single epoch ran.
-export ARCC_MEM="64G"                      # RAM per job
+: "${ARCC_CPUS:=8}"; export ARCC_CPUS      # cpus-per-task (override: ARCC_CPUS=16 bash ...)
+# MEASURED, not estimated. A 9-subject LOSO fold holds
+#   9 x 66,160 trials x 63 ch x 250 samples x 4 bytes ~= 37 GB
+# for the EEG tensor alone, and torch.cat needs the source list AND the
+# concatenated result live at once, so peak is ~2x that. 64G was OOM-killed
+# 70 s in, during assembly, before epoch 1 (job 8884479, all folds).
+# 192G leaves headroom on top of the ~75 GB peak.
+: "${ARCC_MEM:=192G}"; export ARCC_MEM     # override: ARCC_MEM=256G bash scripts/submit_all.sh ...
 # WALL CLOCK -- sized to the SLOWEST fold, not the average.
 # Measured/estimated per-LOSO-fold on one GPU:
 #   EEGNet      ~4.7 hr (measured)      CBraMod  ~1.5 hr (measured)
@@ -56,7 +59,7 @@ export ARCC_MEM="64G"                      # RAM per job
 # the fold with nothing written. Partition limit is 7 days; 2 days gives margin
 # on an H100 (faster than the 4080 these estimates came from) without asking for
 # a week. Override per-sweep with ARCC_TIME=... if a sweep is known to be short.
-export ARCC_TIME="2-00:00:00"              # 2 days
+: "${ARCC_TIME:=2-00:00:00}"; export ARCC_TIME   # 2 days (override: ARCC_TIME=3-00:00:00 ...)
 # -----------------------------------------------------------------------------
 
 # --------------------------- DERIVED (do not edit) ---------------------------
