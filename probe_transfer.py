@@ -1,4 +1,5 @@
 import glob, os, sys, csv
+import sys
 sys.path.insert(0, os.path.join(os.getcwd(), "Retrieval"))
 import numpy as np
 import torch
@@ -15,6 +16,16 @@ CHANCE = 1.0 / N_CONCEPTS
 DUMMY_N = 20000
 OUT_CSV = "probe_transfer_results.csv"
 
+def _pick_run(paths):
+    """Deterministic choice among several runs of one fold.
+
+    Several runs means several seeds and/or epoch budgets. Taking whichever
+    glob returned first is arbitrary, and with 35 ATMS checkpoints on disk
+    across three seeds that arbitrariness is not small.
+    """
+    return sorted(paths)[-1] if paths else None
+
+
 def find_intra_ckpt(encoder, subject):
     import re
     for csv_ in glob.glob(f"outputs/retrieval/{encoder}/{subject}/**/*.csv", recursive=True):
@@ -28,13 +39,23 @@ def find_intra_ckpt(encoder, subject):
     return None
 
 def build_model(encoder):
+    # The two originally-probed encoders keep explicit construction so the
+    # published probe numbers reproduce exactly.
     if encoder == "ATMS":
         from models.atms import ATMS
         return ATMS(joint_train=False)
     if encoder == "LaBraM_ATMS":
         from labram_encoder import LaBraM_ATMS
         return LaBraM_ATMS()
-    raise ValueError(encoder)
+    # Everything else comes from the real registry, so the probe covers whatever
+    # the panel covers without a per-encoder branch here.
+    try:
+        from eeg_encoders import build_encoder
+    except ImportError as _e:
+        raise ValueError(
+            encoder + " is not special-cased and eeg_encoders could not be "
+            "imported (" + str(_e) + "). Run from the repo root.")
+    return build_encoder(encoder)
 
 @torch.no_grad()
 def extract(model, subject):
@@ -136,13 +157,33 @@ if __name__ == "__main__":
         writer = csv.DictWriter(f, fieldnames=["encoder","subject","within","cross",
                                                "cc_retention","norm_drop","rank_corr"])
         writer.writeheader()
-        a = run_encoder("ATMS", writer)
-        l = run_encoder("LaBraM_ATMS", writer)
+        # Encoders from the command line; no args reproduces the original run.
+        encoders = sys.argv[1:] or ["ATMS", "LaBraM_ATMS"]
+        results = {}
+        for _enc in encoders:
+            try:
+                results[_enc] = run_encoder(_enc, writer)
+            except Exception as _exc:
+                # One bad encoder must not lose the others: the CSV is written
+                # incrementally, so keep going and report at the end.
+                print("  !! " + _enc + " FAILED: " +
+                      type(_exc).__name__ + ": " + str(_exc))
+                results[_enc] = None
+        a = results.get("ATMS")
+        l = results.get("LaBraM_ATMS")
     print("\n===== SUMMARY (all three metrics, reported regardless) =====")
-    if a and l:
-        print(f"{'metric':16s} {'ATMS':>8s} {'LaBraM':>8s}")
+    ok = {e: r for e, r in results.items() if r}
+    if ok:
+        w = max(12, max(len(e) for e in ok) + 1)
+        print(f"{'metric':16s}" + "".join(f"{e:>{w}s}" for e in ok))
         for k in ['within','cross','cc_retention','norm_drop','rank_corr']:
-            print(f"{k:16s} {a[k]:8.3f} {l[k]:8.3f}")
+            print(f"{k:16s}" + "".join(f"{ok[e][k]:{w}.3f}" for e in ok))
+        print(f"\nchance = {CHANCE:.3f}  ({N_CONCEPTS}-way)")
+        print("Read cc_retention: raw within-subject accuracy pointed the wrong "
+              "way in both retrieval and classification.")
+    _failed = [e for e, r in results.items() if not r]
+    if _failed:
+        print("\nno rows produced for: " + ", ".join(_failed))
         print(f"\nSaved per-subject results to {OUT_CSV}")
         print("Interpretation guide (committed before seeing results):")
         print("  cc_retention: higher = more above-chance signal survives transfer")
