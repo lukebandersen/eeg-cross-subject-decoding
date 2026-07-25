@@ -24,16 +24,40 @@ import re
 import statistics as st
 import sys
 
+# run_config.py may sit beside this file OR in Retrieval/ (where
+# train_unified.py imports it from). Look in both before giving up.
+_RC_IMPORT_ERROR = None
 try:
     from run_config import load_run_config
-except ImportError:          # run_config.py not alongside: legacy mode
-    def load_run_config(_d):
-        return None
+except ImportError:
+    _here = os.path.dirname(os.path.abspath(__file__))
+    for _cand in (_here, os.path.join(_here, "Retrieval"), os.getcwd(),
+                  os.path.join(os.getcwd(), "Retrieval")):
+        if os.path.isfile(os.path.join(_cand, "run_config.py")):
+            sys.path.insert(0, _cand)
+            try:
+                from run_config import load_run_config
+                break
+            except ImportError:
+                sys.path.pop(0)
+    else:
+        # NOT the same as "these runs have no config". Say which it is, loudly:
+        # a silent fallback here once reported every fold as unverifiable when
+        # the configs were present and only the importer was missing.
+        _RC_IMPORT_ERROR = ("run_config.py not found on sys.path, in this "
+                            "script's directory, or in ./Retrieval. Config "
+                            "checking is DISABLED -- this is a tooling "
+                            "problem, not evidence the runs lack configs.")
+        def load_run_config(_d):
+            return None
 
 # Which column holds v200 top-1. The results CSV header is:
 #   epoch,train_loss,val_loss,test_loss,test_accuracy,v2_acc,...
 # test_accuracy IS the 200-way top-1 (chance = 1/200 = 0.005).
 ACC_COL = "test_accuracy"
+
+# runs skipped by --seed because they had no config (seed unverifiable)
+_seed_skipped = []
 
 CLASS = {
     "ATMS": "specialized",
@@ -115,7 +139,7 @@ def best_val_acc(path):
     return None
 
 
-def collect(roots, timestamps=None):
+def collect(roots, timestamps=None, seed=None):
     """-> (data, ambiguous)
 
     data      : {(encoder, mode): {subject: (acc, timestamp)}}
@@ -131,6 +155,7 @@ def collect(roots, timestamps=None):
     data = {}
     runs = {}
     dupes = {}
+    _seed_skipped.clear()
     for root in roots:
         for path in glob.glob(os.path.join(root, "**", "*.csv"), recursive=True):
             m = FNAME.match(os.path.basename(path))
@@ -143,8 +168,17 @@ def collect(roots, timestamps=None):
             acc = best_val_acc(path)
             if acc is None:
                 continue
-            key = (enc, mode)
             cfg = load_run_config(os.path.dirname(path))
+            if seed is not None:
+                # only keep runs we can POSITIVELY confirm match the seed.
+                # a run with no config, or a different seed, is excluded -- an
+                # unverifiable run must not be silently treated as a match.
+                if cfg is None:
+                    _seed_skipped.append((enc, mode, sub, ts))
+                    continue
+                if cfg.get("seed") != seed:
+                    continue
+            key = (enc, mode)
             runs.setdefault((enc, mode, sub), []).append((ts, acc, cfg))
     ambiguous = {}
     for (enc, mode, sub), lst in runs.items():
@@ -187,6 +221,12 @@ def main():
                     help="where the per-run CSVs live")
     ap.add_argument("--min-folds", type=int, default=1)
     ap.add_argument("--csv", default=None, help="also write a tidy CSV here")
+    ap.add_argument("--seed", type=int, default=None,
+                    help="keep only runs whose run_config.json records this seed. "
+                         "Reads the recorded config -- the provenance you already "
+                         "captured -- instead of making you translate seed to "
+                         "timestamp by hand. Runs with no config are skipped with "
+                         "a count, since their seed cannot be verified.")
     ap.add_argument("--timestamps", nargs="+", default=None, metavar="SUBSTR",
                     help="only use run directories whose timestamp contains one "
                          "of these substrings, e.g. --timestamps 07-02 07-06 "
@@ -204,7 +244,18 @@ def main():
                          "that will be compared against published numbers.")
     args = ap.parse_args()
 
-    data, ambiguous = collect(args.roots, args.timestamps)
+    if _RC_IMPORT_ERROR:
+        print("=" * 78)
+        print(" WARNING: " + _RC_IMPORT_ERROR)
+        print(" Fix: copy run_config.py next to peek_panel.py, then re-run.")
+        print("=" * 78 + "\n")
+
+    data, ambiguous = collect(args.roots, args.timestamps, args.seed)
+
+    if args.seed is not None and _seed_skipped:
+        print(f" NOTE: --seed {args.seed} skipped {len(_seed_skipped)} run(s) with "
+              f"no run_config.json (seed unverifiable, e.g. "
+              f"{_seed_skipped[0][0]} {_seed_skipped[0][3]}).\n")
 
     if ambiguous and not args.allow_latest:
         print("=" * 78)

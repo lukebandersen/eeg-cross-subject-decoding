@@ -45,3 +45,15 @@ S23	EEGNetv4_Encoder	intra	things	44	SEED44	PRIORITY 2: cheap (~6 min/fold); con
 S24	EEGNetv4_Encoder	loso	things	44	SEED44	PRIORITY 2: ~4.7 hr/fold locally
 S25	EEGConformer_Encoder	intra	things	44	SEED44	PRIORITY 3: ~86 min/fold; slowest encoder
 S26	EEGConformer_Encoder	loso	things	44	SEED44	PRIORITY 3: the expensive one, ~255 ep x 9x data
+
+# --- seed 42 re-run on the cluster ------------------------------------
+# Makes the panel fully cluster-native at 3 seeds. The DONE_LOCAL
+# seed-42 rows above are on the desktop and predate run_config.json,
+# so they cannot pass --seed; these can.
+# Submit:  bash scripts/submit_all.sh SEED42 --go
+S01	CBraMod_Encoder	intra	things	42	SEED42	cluster-native seed 42 (desktop copy is configless, cannot pass --seed)
+S02	CBraMod_Encoder	loso	things	42	SEED42	cluster-native seed 42 (desktop copy is configless, cannot pass --seed)
+S03	EEGNetv4_Encoder	intra	things	42	SEED42	cluster-native seed 42 (desktop copy is configless, cannot pass --seed)
+S04	EEGNetv4_Encoder	loso	things	42	SEED42	cluster-native seed 42 (desktop copy is configless, cannot pass --seed)
+S05	EEGConformer_Encoder	intra	things	42	SEED42	cluster-native seed 42 (desktop copy is configless, cannot pass --seed)
+S06	EEGConformer_Encoder	loso	things	42	SEED42	cluster-native seed 42 (desktop copy is configless, cannot pass --seed)
