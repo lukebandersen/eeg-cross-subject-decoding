@@ -142,6 +142,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument('--batch_size', type=int,   default=1024)
     p.add_argument('--lr',         type=float, default=3e-4)
     p.add_argument('--seed',       type=int,   default=42)
+    p.add_argument('--freeze_backbone', action='store_true',
+                   help='freeze the pretrained backbone; train only the projection head. For LaBraM_ATMS and CBraMod_Encoder.')
     p.add_argument('--early_stopping_patience', type=int, default=10,
                    help='Stop training if val loss does not improve for this many '
                         'consecutive epochs. Set to 0 to disable.')
@@ -401,6 +403,7 @@ def _run_one(sub, args, device, current_time, preloaded):
     if getattr(args, 'dataset', 'things') == 'alljoined' and 'LaBraM' in args.encoder_type:
         from labram_encoder import _ALLJOINED_CHANNELS_64
         _enc_kwargs['channel_names'] = _ALLJOINED_CHANNELS_64
+    _enc_kwargs['freeze_backbone'] = args.freeze_backbone
     model = build_encoder(
         args.encoder_type,
         n_chans=args.n_chans,

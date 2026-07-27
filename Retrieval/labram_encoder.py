@@ -86,7 +86,13 @@ class LaBraM_ATMS(nn.Module):
         # Full fine-tune (all LaBraM params trainable). Matches the intra
         # full-FT baseline (v200-top1=0.175). To switch to peft-LoRA, restore
         # the get_peft_model block targeting ["fc1","fc2"].
-        print("[LaBraM_ATMS] full fine-tune (all params trainable).")
+        if freeze_backbone:
+            for _p in self.encoder.parameters():
+                _p.requires_grad = False
+            print("[LaBraM_ATMS] backbone FROZEN (encoder requires_grad=False; "
+                  "projection head stays trainable).")
+        else:
+            print("[LaBraM_ATMS] full fine-tune (all params trainable).")
         self.proj = ProjectionHead(in_dim=200, out_dim=out_dim)
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
         self.loss_func = ClipLoss()
