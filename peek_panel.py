@@ -81,6 +81,7 @@ PARAMS = {
 # rather than averaging them. Extend this list when a new axis appears; the
 # point of dumping the whole config is that you can, without re-running anything.
 COMPARABILITY_FIELDS = ["seed", "epochs", "lr", "batch_size", "n_chans",
+                        "freeze_backbone",  # a frozen run is NOT the same config as full-FT
                         "n_times", "val_ratio", "dataset"]
 
 # filename pattern: {encoder}_{mode}_{subject}.csv
@@ -139,7 +140,7 @@ def best_val_acc(path):
     return None
 
 
-def collect(roots, timestamps=None, seed=None):
+def collect(roots, timestamps=None, seed=None, freeze='false'):
     """-> (data, ambiguous)
 
     data      : {(encoder, mode): {subject: (acc, timestamp)}}
@@ -177,6 +178,12 @@ def collect(roots, timestamps=None, seed=None):
                     _seed_skipped.append((enc, mode, sub, ts))
                     continue
                 if cfg.get("seed") != seed:
+                    continue
+            if freeze != "any":
+                # missing field = full-FT (those runs predate the flag)
+                is_frozen = bool(cfg.get("freeze_backbone", False)) if cfg else False
+                want_frozen = (freeze == "true")
+                if is_frozen != want_frozen:
                     continue
             key = (enc, mode)
             runs.setdefault((enc, mode, sub), []).append((ts, acc, cfg))
@@ -221,6 +228,11 @@ def main():
                     help="where the per-run CSVs live")
     ap.add_argument("--min-folds", type=int, default=1)
     ap.add_argument("--csv", default=None, help="also write a tidy CSV here")
+    ap.add_argument("--freeze", choices=["true", "false", "any"], default="false",
+                    help="select frozen-backbone runs (true), full-fine-tune runs "
+                         "(false, the DEFAULT so the panel excludes the freeze "
+                         "experiment), or both (any). A missing freeze_backbone "
+                         "field counts as false, since those runs predate the flag.")
     ap.add_argument("--seed", type=int, default=None,
                     help="keep only runs whose run_config.json records this seed. "
                          "Reads the recorded config -- the provenance you already "
@@ -250,7 +262,7 @@ def main():
         print(" Fix: copy run_config.py next to peek_panel.py, then re-run.")
         print("=" * 78 + "\n")
 
-    data, ambiguous = collect(args.roots, args.timestamps, args.seed)
+    data, ambiguous = collect(args.roots, args.timestamps, args.seed, args.freeze)
 
     if args.seed is not None and _seed_skipped:
         print(f" NOTE: --seed {args.seed} skipped {len(_seed_skipped)} run(s) with "
