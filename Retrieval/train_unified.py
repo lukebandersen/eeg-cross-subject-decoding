@@ -403,7 +403,11 @@ def _run_one(sub, args, device, current_time, preloaded):
     if getattr(args, 'dataset', 'things') == 'alljoined' and 'LaBraM' in args.encoder_type:
         from labram_encoder import _ALLJOINED_CHANNELS_64
         _enc_kwargs['channel_names'] = _ALLJOINED_CHANNELS_64
-    _enc_kwargs['freeze_backbone'] = args.freeze_backbone
+    # Only the foundation wrappers accept freeze_backbone; passing it to the
+    # specialist encoders (EEGNet, EEGConformer, ShallowFBCSP) raises TypeError.
+    if args.encoder_type in ('LaBraM_ATMS', 'CBraMod_Encoder'):
+        if args.encoder_type in ('LaBraM_ATMS', 'CBraMod_Encoder'):
+        _enc_kwargs['freeze_backbone'] = args.freeze_backbone
     model = build_encoder(
         args.encoder_type,
         n_chans=args.n_chans,
