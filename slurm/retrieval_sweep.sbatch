@@ -97,6 +97,15 @@ else
   echo "unknown DATASET=$DATASET"; exit 3
 fi
 
+# Optional frozen-backbone experiment. Submit with --export=...,FREEZE=1 to
+# freeze the pretrained backbone and train only the projection head. Applies to
+# LaBraM_ATMS and CBraMod_Encoder; a no-op for the specialist encoders (their
+# wrappers ignore the flag). Appended after CMD is built so it covers both the
+# LOSO and intra branches.
+if [[ "${FREEZE:-0}" == "1" ]]; then
+    CMD+=(--freeze_backbone)
+    echo "FREEZE=1 -> backbone frozen, projection head only"
+fi
 echo "RUN: ${CMD[*]}"
 srun "${CMD[@]}"
 status=$?
