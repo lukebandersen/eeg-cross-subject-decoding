@@ -406,7 +406,6 @@ def _run_one(sub, args, device, current_time, preloaded):
     # Only the foundation wrappers accept freeze_backbone; passing it to the
     # specialist encoders (EEGNet, EEGConformer, ShallowFBCSP) raises TypeError.
     if args.encoder_type in ('LaBraM_ATMS', 'CBraMod_Encoder'):
-        if args.encoder_type in ('LaBraM_ATMS', 'CBraMod_Encoder'):
         _enc_kwargs['freeze_backbone'] = args.freeze_backbone
     model = build_encoder(
         args.encoder_type,
