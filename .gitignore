@@ -54,8 +54,8 @@ Thumbs.db
 # ============ vendored third-party libraries ============
 **/mne-python-main/
 View the Data (visual)/
-LaBraM/
-labram_scaffold/
+LaBraM/checkpoints/
+labram_scaffold/__pycache__/
 REU-PIPELINE/
 
 # ============ downloaded model weights / caches ============
